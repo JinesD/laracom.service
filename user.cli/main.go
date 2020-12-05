@@ -48,6 +48,20 @@ func main() {
 			}
 			log.Printf("创建用户成功：%v", r.User.Id)
 
+			token, err := client.Auth(context.TODO(), &pb.User{
+				Email:    email,
+				Password: password,
+			})
+			if err != nil {
+				log.Fatalf("failed to logging in: %v", err)
+			}
+			log.Printf("logging in success: %v", token.Token)
+
+			token, err = client.ValidateToken(context.TODO(), token)
+			if err != nil {
+				log.Fatalf("failed to validate token: %v", err)
+			}
+			log.Printf("validate token success: %v", token.Valid)
 
 			getAll, err := client.GetAll(context.Background(), &pb.Request{})
 			if err != nil {
