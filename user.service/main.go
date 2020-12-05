@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/JinesD/laracom.service/user.service/service"
+
 	database "github.com/JinesD/laracom.service/user.service/db"
 	"github.com/JinesD/laracom.service/user.service/handler"
 	pb "github.com/JinesD/laracom.service/user.service/proto/user"
@@ -22,6 +24,7 @@ func main() {
 	db.AutoMigrate(&pb.User{})
 
 	repo := &repository.UserRepository{Db: db}
+	token := &service.TokenService{Repo: repo}
 
 	srv := micro.NewService(
 		micro.Name("laracom.user.service"),
@@ -29,7 +32,9 @@ func main() {
 	)
 	srv.Init()
 
-	pb.RegisterUserServiceHandler(srv.Server(), &handler.UserService{Repo: repo})
+	if err := pb.RegisterUserServiceHandler(srv.Server(), &handler.UserService{Repo: repo, Token: token}); err != nil {
+		fmt.Println(err)
+	}
 
 	if err := srv.Run(); err != nil {
 		fmt.Println(err)

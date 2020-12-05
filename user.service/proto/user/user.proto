@@ -20,6 +20,12 @@ message User {
   string updated_at = 13;
 }
 
+message Token {
+  string token = 1;
+  bool valid = 2;
+  repeated Error errors = 3;
+}
+
 message Error {
   int32 code = 1;
   string description = 2;
@@ -34,6 +40,8 @@ message Response {
 }
 
 service UserService {
+  rpc Auth(User) returns (Token) {}
+  rpc ValidateToken(Token) returns (Token) {}
   rpc Create(User) returns (Response) {}
   rpc Get(User) returns (Response) {}
   rpc GetAll(Request) returns (Response) {}

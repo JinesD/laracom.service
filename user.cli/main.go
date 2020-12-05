@@ -48,6 +48,7 @@ func main() {
 			}
 			log.Printf("创建用户成功：%v", r.User.Id)
 
+
 			getAll, err := client.GetAll(context.Background(), &pb.Request{})
 			if err != nil {
 				log.Fatalf("获取所有用户失败：%v", err)

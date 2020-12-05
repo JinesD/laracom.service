@@ -2,6 +2,10 @@ package handler
 
 import (
 	"context"
+	"errors"
+	"log"
+
+	"github.com/JinesD/laracom.service/user.service/service"
 
 	pb "github.com/JinesD/laracom.service/user.service/proto/user"
 	"github.com/JinesD/laracom.service/user.service/repo"
@@ -9,7 +13,46 @@ import (
 )
 
 type UserService struct {
-	Repo repo.Repository
+	Repo  repo.Repository
+	Token service.Authable
+}
+
+func (srv *UserService) Auth(ctx context.Context, req *pb.User, resp *pb.Token) error {
+	log.Println("Logging in with: ", req.Email, req.Password)
+
+	user, err := srv.Repo.GetByEmail(req.Email)
+	log.Println(user)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return err
+	}
+
+	token, err := srv.Token.Encode(user)
+	if err != nil {
+		return err
+	}
+
+	resp.Token = token
+
+	return nil
+}
+
+func (srv *UserService) ValidateToken(ctx context.Context, req *pb.Token, resp *pb.Token) error {
+	claims, err := srv.Token.Decode(req.Token)
+	if err != nil {
+		return err
+	}
+
+	if claims.User.Id == "" {
+		return errors.New("invalid user")
+	}
+
+	resp.Valid = true
+
+	return nil
 }
 
 func (srv *UserService) Get(ctx context.Context, req *pb.User, resp *pb.Response) error {
